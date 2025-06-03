@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import uuid
+from datetime import datetime
 
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
@@ -43,7 +46,8 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
-    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    items: list[Item] = Relationship(back_populates="owner", cascade_delete=True)
+    google_credentials: GoogleCredentials | None = Relationship(back_populates="user")
 
 
 # Properties to return via API, id is always required
@@ -111,3 +115,14 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+
+class GoogleCredentials(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", unique=True, nullable=False, ondelete="CASCADE"
+    )
+    credentials_json: str
+    expiry: datetime | None = None
+
+    user: User | None = Relationship(back_populates="google_credentials")
