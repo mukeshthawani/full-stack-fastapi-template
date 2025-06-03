@@ -123,3 +123,13 @@ The tests require the database and other services to be running with Docker Comp
 - **backend/pyproject.toml** – Backend dependencies and Python settings.
 
 This should give you an idea of how the project was extended from the template to add Google Calendar support. You can use the same approach to integrate other external services.
+
+## 7. Running the backend
+
+To start the development stack use:
+
+```bash
+docker compose watch
+```
+
+Visit the API docs at <http://localhost:8000/docs> once the services are running.
