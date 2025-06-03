@@ -4,7 +4,14 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+from app.models import (
+    GoogleCredentials,
+    Item,
+    ItemCreate,
+    User,
+    UserCreate,
+    UserUpdate,
+)
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -52,3 +59,24 @@ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -
     session.commit()
     session.refresh(db_item)
     return db_item
+
+
+def get_google_credentials(
+    session: Session, user_id: uuid.UUID
+) -> GoogleCredentials | None:
+    statement = select(GoogleCredentials).where(GoogleCredentials.user_id == user_id)
+    return session.exec(statement).first()
+
+
+def upsert_google_credentials(
+    session: Session, user_id: uuid.UUID, credentials_json: str
+) -> GoogleCredentials:
+    creds = get_google_credentials(session, user_id)
+    if creds:
+        creds.credentials_json = credentials_json
+    else:
+        creds = GoogleCredentials(user_id=user_id, credentials_json=credentials_json)
+    session.add(creds)
+    session.commit()
+    session.refresh(creds)
+    return creds
